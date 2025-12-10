@@ -4,6 +4,7 @@ body {
     align-items: center;
     font-family: "Segoe UI Symbol", "Noto Sans Symbols", "Apple Color Emoji", sans-serif;
     background-color: #f0f0f0;
+    margin: 0;
 }
 
 h1 {
@@ -26,7 +27,7 @@ h1 {
     cursor: pointer;
     font-size: 50px;
     position: relative;
-    transition: background 0.2s;
+    user-select: none; /* prevent text selection when clicking */
 }
 
 .light { background-color: #eeeed2; }
@@ -34,17 +35,13 @@ h1 {
 
 .square:hover { filter: brightness(1.2); }
 
-.selected { outline: 3px solid yellow; }
+.selected {
+    outline: 3px solid yellow;
+    box-sizing: border-box;
+}
 
-.valid-move::after {
-    content: '';
-    position: absolute;
-    width: 25px;
-    height: 25px;
-    border-radius: 50%;
-    background-color: rgba(255,165,0,0.7);
-    pointer-events: none; /* important to allow clicks */
-    z-index: 10;
+.valid-move {
+    background-color: rgba(255,165,0,0.5) !important; /* highlight valid moves */
 }
 
 #status {
