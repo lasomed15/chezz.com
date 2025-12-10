@@ -55,6 +55,7 @@ function render() {
     else statusEl.textContent = `${turn.charAt(0).toUpperCase()+turn.slice(1)}'s turn`;
 }
 
+// Click handler
 function handleClick(row,col){
     const piece = board[row][col];
 
@@ -81,6 +82,7 @@ function handleClick(row,col){
     render();
 }
 
+// Legal moves
 function legalMoves(r,c){
     const piece = board[r][c];
     if(!piece) return [];
