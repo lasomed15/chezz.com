@@ -55,7 +55,6 @@ function render() {
     else statusEl.textContent = `${turn.charAt(0).toUpperCase()+turn.slice(1)}'s turn`;
 }
 
-// Handle clicks
 function handleClick(row,col){
     const piece = board[row][col];
 
@@ -82,7 +81,6 @@ function handleClick(row,col){
     render();
 }
 
-// Generate legal moves
 function legalMoves(r,c){
     const piece = board[r][c];
     if(!piece) return [];
@@ -170,7 +168,6 @@ function movePiece(r1,c1,r2,c2){
     turn=turn==='white'?'black':'white';
 }
 
-// Check detection
 function inCheck(color){
     const king= color==='white'?'wK':'bK';
     let kingPos;
@@ -194,7 +191,6 @@ function wouldBeInCheck(r1,c1,r2,c2){
     return check;
 }
 
-// Checkmate
 function checkCheckmate(){
     for(let r=0;r<8;r++) for(let c=0;c<8;c++){
         const p=board[r][c];
@@ -204,6 +200,5 @@ function checkCheckmate(){
     return inCheck(turn);
 }
 
-// Initialize
 initBoard();
 render();
