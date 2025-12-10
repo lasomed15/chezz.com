@@ -5,6 +5,8 @@ let board = [];
 let selected = null;
 let turn = 'white';
 let enPassantTarget = null;
+let kingMoved = {wK:false,bK:false};
+let rookMoved = {'whiteA':false,'whiteH':false,'blackA':false,'blackH':false};
 
 const pieces = {
     wK:'♔', wQ:'♕', wR:'♖', wB:'♗', wN:'♘', wP:'♙',
@@ -48,10 +50,10 @@ function render() {
         }
     }
 
-    statusEl.textContent = `${turn.charAt(0).toUpperCase()+turn.slice(1)}'s turn`;
+    if(checkCheckmate()) statusEl.textContent = `${turn==='white'?'Black':'White'} wins by checkmate!`;
+    else statusEl.textContent = `${turn.charAt(0).toUpperCase()+turn.slice(1)}'s turn`;
 }
 
-// Click logic
 function handleClick(row,col){
     const piece = board[row][col];
 
@@ -78,7 +80,6 @@ function handleClick(row,col){
     render();
 }
 
-// Simple linear moves helper
 function linearMoves(r,c,directions){
     let moves=[];
     const piece = board[r][c];
@@ -94,7 +95,6 @@ function linearMoves(r,c,directions){
     return moves;
 }
 
-// Legal moves simplified (pawns + knights + basic sliding)
 function legalMoves(r,c){
     const piece = board[r][c];
     if(!piece) return [];
@@ -107,6 +107,7 @@ function legalMoves(r,c){
             if(!board[r+dir][c]) moves.push({row:r+dir,col:c});
             if(c>0 && enemy(board[r+dir][c-1])) moves.push({row:r+dir,col:c-1});
             if(c<7 && enemy(board[r+dir][c+1])) moves.push({row:r+dir,col:c+1});
+            if(enPassantTarget && enPassantTarget.row===r+dir && Math.abs(enPassantTarget.col-c)===1) moves.push({...enPassantTarget});
             break;
         case 'N':
             [[-2,-1],[-2,1],[2,-1],[2,1],[-1,-2],[-1,2],[1,-2],[1,2]].forEach(([dr,dc])=>{
@@ -128,16 +129,78 @@ function legalMoves(r,c){
                 const nr=r+dr,nc=c+dc;
                 if(nr>=0 && nr<8 && nc>=0 && nc<8 && (!board[nr][nc] || enemy(board[nr][nc]))) moves.push({row:nr,col:nc});
             }
+            // castling
+            if(!kingMoved[piece] && !inCheck(turn)){
+                if(!board[r][c+1]&&!board[r][c+2]&&!rookMoved[turn+'H']) moves.push({row:r,col:c+2,castle:true});
+                if(!board[r][c-1]&&!board[r][c-2]&&!board[r][c-3]&&!rookMoved[turn+'A']) moves.push({row:r,col:c-2,castle:true});
+            }
             break;
     }
-    return moves;
+
+    return moves.filter(m=>!wouldBeInCheck(r,c,m.row,m.col));
 }
 
-// Move piece
 function movePiece(r1,c1,r2,c2){
-    board[r2][c2]=board[r1][c1];
-    board[r1][c1]='';
-    turn = turn==='white'?'black':'white';
+    const piece=board[r1][c1];
+    const move=legalMoves(r1,c1).find(m=>m.row===r2 && m.col===c2);
+    if(!move) return;
+
+    // castling
+    if(move.castle){
+        if(c2>c1){ board[r1][c1+2]=piece; board[r1][c1]=''; board[r1][c1+1]=board[r1][7]; board[r1][7]=''; }
+        else { board[r1][c1-2]=piece; board[r1][c1]=''; board[r1][c1-1]=board[r1][0]; board[r1][0]=''; }
+        kingMoved[piece]=true; turn=turn==='white'?'black':'white'; return;
+    }
+
+    // en passant
+    if(piece[1]==='P' && enPassantTarget && enPassantTarget.row===r2 && Math.abs(enPassantTarget.col-c2)===1){
+        board[r1][c1]=''; board[r2][c2]=piece; board[r1][c2]=''; enPassantTarget=null; turn=turn==='white'?'black':'white'; return;
+    }
+
+    if(piece[1]==='P' && Math.abs(r2-r1)===2) enPassantTarget={row:(r1+r2)/2,col:c1};
+    else enPassantTarget=null;
+
+    if(piece[1]==='K') kingMoved[piece]=true;
+    if(piece[1]==='R') rookMoved[turn+(c1===0?'A':'H')]=true;
+
+    board[r2][c2]=piece; board[r1][c1]='';
+
+    // pawn promotion
+    if(piece[1]==='P' && (r2===0 || r2===7)) board[r2][c2]=turn==='white'?'wQ':'bQ';
+
+    turn=turn==='white'?'black':'white';
+}
+
+function inCheck(color){
+    const king= color==='white'?'wK':'bK';
+    let kingPos;
+    for(let r=0;r<8;r++) for(let c=0;c<8;c++) if(board[r][c]===king) kingPos={r,c};
+    for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+        const p=board[r][c];
+        if(p && ((color==='white' && isBlack(p)) || (color==='black' && isWhite(p))))
+            if(legalMoves(r,c).some(m=>m.row===kingPos.r && m.col===kingPos.c)) return true;
+    }
+    return false;
+}
+
+function wouldBeInCheck(r1,c1,r2,c2){
+    const tmp = board.map(r=>[...r]);
+    const piece = tmp[r1][c1];
+    tmp[r2][c2]=piece; tmp[r1][c1]='';
+    const oldBoard = board;
+    board=tmp;
+    const check=inCheck(turn);
+    board=oldBoard;
+    return check;
+}
+
+function checkCheckmate(){
+    for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+        const p=board[r][c];
+        if(p && ((turn==='white'&&isWhite(p))||(turn==='black'&&isBlack(p))))
+            if(legalMoves(r,c).length>0) return false;
+    }
+    return inCheck(turn);
 }
 
 initBoard();
