@@ -27,7 +27,7 @@ h1 {
     cursor: pointer;
     font-size: 50px;
     position: relative;
-    user-select: none; /* prevent text selection when clicking */
+    user-select: none;
 }
 
 .light { background-color: #eeeed2; }
@@ -41,7 +41,7 @@ h1 {
 }
 
 .valid-move {
-    background-color: rgba(255,165,0,0.5) !important; /* highlight valid moves */
+    background-color: rgba(255,165,0,0.5) !important;
 }
 
 #status {
