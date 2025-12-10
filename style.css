@@ -24,29 +24,17 @@ h1 {
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    position: relative;
+    font-size: 50px;
+    transition: background 0.2s;
 }
 
-.light {
-    background-color: #eeeed2;
-}
+.light { background-color: #eeeed2; }
+.dark { background-color: #769656; }
 
-.dark {
-    background-color: #769656;
-}
+.square:hover { filter: brightness(1.2); }
 
-.selected {
-    outline: 3px solid yellow;
-}
-
-.valid-move {
-    outline: 3px solid orange;
-}
-
-.square img {
-    width: 70%;
-    height: 70%;
-}
+.selected { outline: 3px solid yellow; }
+.valid-move { outline: 3px solid orange; }
 
 #status {
     margin-top: 15px;
